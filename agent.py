@@ -1,10 +1,15 @@
-from ollama import chat
+from inference import InferenceEngine
 
-messages = [{
-    'role':'user',
-    'content':'Why is the sky blue?',
-},]
+llm = InferenceEngine()
 
-response = chat('gemma3:1b', messages=messages)
-print(response['message']['content'])
+llm.loadModel(model_name="gemma3:1b")
+
+model = llm.modelInfo()
+print(model)
+
+prompt = "What is the capital of France?"
+
+
+response = llm.generate(prompt=prompt)
+print(response)
 
