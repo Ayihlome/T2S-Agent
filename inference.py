@@ -33,11 +33,8 @@ class InferenceEngine:
             raise ValueError("No active model set. Please set an active model before generating.")
 
         # safegaurd would check and sanitize prompt here
-        
-        response = chat(self.active_model, messages=[{
-            'role': 'user',
-            'content': prompt,
-        }])
+        # The prompt is now a list containing the context and the user input, which is passed to the chat function
+        response = chat(self.active_model, messages=prompt)
 
         # safegaurd would check response here
 

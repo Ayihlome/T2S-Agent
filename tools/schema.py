@@ -1,6 +1,6 @@
-from sqlalchemy import Session
-from database import engine
-from model import Products
+from sqlalchemy.orm import Session
+from database.database import engine
+from database.model import Products
 
 def get_schema():
     with Session(engine) as session:

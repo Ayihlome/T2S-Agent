@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from model import Base
+from database.model import Base
 
 engine = create_engine(
     "sqlite:///database/inventory.db",

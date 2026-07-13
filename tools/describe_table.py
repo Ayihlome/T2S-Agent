@@ -1,6 +1,6 @@
-from sqlachemy import Session, text
-from database import engine
-from database.model import Products
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+from database.database import engine
 from tools.validator import validatePrompt
 
 def describe_table(table_name):

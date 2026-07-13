@@ -1,6 +1,5 @@
-from sqlachemy import Session
-from database import engine
-from model import Products
+from sqlalchemy.orm import Session
+from database.database import engine
 
 
 def list_tables():

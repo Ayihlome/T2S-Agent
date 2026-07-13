@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from database import engine
-from model import Products
+from database.database import engine
+from database.model import Products
 
 with Session(engine) as session:
     prod1 = Products(product_name="Coca Cola 2L", price=18, description="2L Bottle", sales_pm=25, quantity=100, supplier="Coke Man")
