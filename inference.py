@@ -1,16 +1,19 @@
-from ollama import chat, ShowResponse, show
+from ollama import chat, ShowResponse, show, ChatResponse, list
+import ollama 
 
 class InferenceEngine:
     def __init__(self):
-        self.models = ['gemma3:1b']
+        self.models = [m.model for m in ollama.list().models] #gemma 3:1b is also avaliable
         self.active_model: str = None
     
     def loadModel (self, model_name:str):
-        if model_name in self.models:
-            self.active_model = model_name  #don't load a model we dont have locally
+        model_name = model_name.strip()
+
+        if model_name in [m.strip() for m in self.models]:
+            self.active_model = model_name
         else:
             raise ValueError(f"Model '{model_name}' is not available.")
-    
+
     def modelInfo(self):
         if self.active_model is None:
             raise ValueError("No active model set. Please set an active model before retrieving model info.")
@@ -28,17 +31,17 @@ class InferenceEngine:
         print(f'Capabilities:  {response.capabilities}')
 
 
-    def generate(self, prompt: str) -> str:
+    def generate(self, prompt: str, tools:list[dict] = None) -> ChatResponse:
         if self.active_model is None:
             raise ValueError("No active model set. Please set an active model before generating.")
 
         # safegaurd would check and sanitize prompt here
         # The prompt is now a list containing the context and the user input, which is passed to the chat function
-        response = chat(self.active_model, messages=prompt)
+        response : ChatResponse = chat (self.active_model, messages=prompt, tools=tools)
 
         # safegaurd would check response here
 
-        return response['message']['content']
+        return response
     
 
         

@@ -1,21 +1,19 @@
 from ast import arguments
 import json
 import re
-
 from inference import InferenceEngine
-from tools import execute_sql
-from tools.list_tables import list_tables
-from tools.schema import get_schema
-from tools.execute_sql import execute_sql
+from tools.list_tables import list_tables, list_tables_tool
+from tools.schema import get_schema, get_schema_tool
+from tools.execute_sql import execute_sql, execute_sql_tool
 from contextBuilder.context_manager import ContextBuilder
 
 
 llm = InferenceEngine()
 
-llm.loadModel(model_name="gemma3:1b")
+llm.loadModel(model_name="gemma4:e2b")
 
 # Tool Registration
-tools = {
+available_tools = {
     "execute_sql": execute_sql,
     "get_schema": get_schema,
     "list_tables": list_tables
@@ -33,51 +31,67 @@ context.add_to_history(prompt)
 # except Exception as e:
 #     print(f"An error occurred: {str(e)}")
 
+
+response = llm.generate(prompt=context.build_context(), tools=[execute_sql_tool, get_schema_tool, list_tables_tool])
+print("Thinking....")
+print("RAW MODEL RESPONSE", response)
+
 while True:
-        response = llm.generate(prompt=context.build_context())
-        print("RAW MODEL RESPONSE", response)
+    if response.message.tool_calls:
+        # Native tool call currently has a bug so I will be falling back to a custom tool calling
+        print("Tool Call Detected:", response.tool_calls)
+        # if there isnt any tool call then the response is just a normal response from the model and we can break the loop
 
-        # Check if the response contains a tool call in JSON format
-        match = re.search(r"\{.*\}", response, re.DOTALL)  # Match JSON object in the response
-
-        if match:
-            tool_call = json.loads(match.group(0)) 
-            print("Tool Call Detected:", tool_call)
-            # if there isnt any tool call then the response is just a normal response from the model and we can break the loop
-            if tool_call is None:
-                print(response)
-                break
-
-            tool = tools.get(tool_call.get("tool"))
-
-            if tool is None:
-                print(response)
-                break
-
-            arguments = tool_call.get("arguments") #get the agruments if needed for the tool call
-            print("Arguments:", arguments)
-
-            if not arguments:  # If arguments are None or empty, call the tool without arguments
-                result = tool()  # Call the tool without arguments
+        # Get the tools being called
+        for tool in response.message.tool_calls:
+            #  ensure the function is there then called it
+            if execute_sql := available_tools.get(tool.function.name):
+                    print("Calling function: ", tool.function.name)
+                    print('Arguments:', tool.function.arguments)
+                    output = execute_sql(**tool.function.arguments)
+                    print('Function output:', output)
             else:
-                result = tool(arguments)  # Call the tool with arguments
+                    raise ValueError("'Function', tool.function.name, 'not found'")
+            
+            if get_schema := available_tools.get(tool.function.name):
+                    print("Calling function: ", tool.function.name)
+                    print('Arguments:', tool.function.arguments)
+                    output = get_schema(**tool.function.arguments)
+                    print('Function output:', output)
+            else:
+                    raise ValueError("'Function', tool.function.name, 'not found'")
+            
+            if list_table := available_tools.get(tool.function.name):
+                    print("Calling function: ", tool.function.name)
+                    print('Arguments:', tool.function.arguments)
+                    output = list_table(**tool.function.arguments)
+                    print('Function output:', output)
+            else:
+                    raise ValueError("'Function', tool.function.name, 'not found'")
+            
+            
+        # Logging for debugging
+        print("Before adding tool:")
+        print(context.history)
 
-            print("Tool Result:", result)
-            print("Before adding tool:")
-            print(context.history)
-            context.add_to_history({
-                "role": "tool",
-                "name": tool_call["tool"],
-                "content": json.dumps(result)
-            })
-            print("After adding tool:")
-            print(context.history)
-            print("Updated Context History:", context.history)
+        # Append the tool results to conetx window
+        context.add_to_history({
+            "role": "tool",
+            "content": str(output),
+            "tool_name": tool.fucntion.name["tool"],
+            
+        })
 
-            ctx = context.build_context()
+        print("Updated Context History:", context.history)
 
-            response = llm.generate(prompt=ctx)
+        # generate final response
+
+        ctx = context.build_context()
+        response = llm.generate(prompt=ctx)
+    else:
+
+        break
 
 
-print(response)
+print("Final Response",response)
 print("Context History:", context.history)
