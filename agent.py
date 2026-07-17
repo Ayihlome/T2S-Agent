@@ -37,61 +37,48 @@ print("Thinking....")
 print("RAW MODEL RESPONSE", response)
 
 while True:
-    if response.message.tool_calls:
-        # Native tool call currently has a bug so I will be falling back to a custom tool calling
-        print("Tool Call Detected:", response.tool_calls)
-        # if there isnt any tool call then the response is just a normal response from the model and we can break the loop
+    try:
+        tool_request = json.loads(response.message.content)
+        print("Tool being called: ", tool_request)
+    except json.JSONDecodeError:
+        # The resonse now is no longer a JSON so is a response
+        print("\n FINAL RESPONSE (None JSON): ", response.message.content)
+        break
 
-        # Get the tools being called
-        for tool in response.message.tool_calls:
-            #  ensure the function is there then called it
-            if execute_sql := available_tools.get(tool.function.name):
-                    print("Calling function: ", tool.function.name)
-                    print('Arguments:', tool.function.arguments)
-                    output = execute_sql(**tool.function.arguments)
-                    print('Function output:', output)
-            else:
-                    raise ValueError("'Function', tool.function.name, 'not found'")
-            
-            if get_schema := available_tools.get(tool.function.name):
-                    print("Calling function: ", tool.function.name)
-                    print('Arguments:', tool.function.arguments)
-                    output = get_schema(**tool.function.arguments)
-                    print('Function output:', output)
-            else:
-                    raise ValueError("'Function', tool.function.name, 'not found'")
-            
-            if list_table := available_tools.get(tool.function.name):
-                    print("Calling function: ", tool.function.name)
-                    print('Arguments:', tool.function.arguments)
-                    output = list_table(**tool.function.arguments)
-                    print('Function output:', output)
-            else:
-                    raise ValueError("'Function', tool.function.name, 'not found'")
-            
-            
-        # Logging for debugging
-        print("Before adding tool:")
-        print(context.history)
+    if tool_request["tool"] in available_tools:
+        tool : function = available_tools.get(tool_request["tool"])
+        output = tool(tool_request["arguments"])
 
-        # Append the tool results to conetx window
+        # Add the result to the context and wait for final response, starting with the assistents response
         context.add_to_history({
-            "role": "tool",
-            "content": str(output),
-            "tool_name": tool.fucntion.name["tool"],
-            
+            "role":"assistant",
+            "content": response.message.content
         })
 
-        print("Updated Context History:", context.history)
+        context.add_to_history({
+            "role":"user",
+                "content":
+            f"""
+            Tool execute_sql returned:
 
-        # generate final response
+            {output}
 
-        ctx = context.build_context()
-        response = llm.generate(prompt=ctx)
+            If this fully answers the question,
+            answer the user directly.
+
+            Only call another tool if more information is needed.
+            """
+        })
+
+        print("\n Uploading current context:  ", context.history)
+        response = llm.generate(prompt=context.build_context(), tools=[execute_sql_tool, get_schema_tool, list_tables_tool])
+        print("\n POST TOOL RESPONSE: ", response )
     else:
-
+        print("Tool not found...")
         break
 
 
-print("Final Response",response)
+
+
+print("\n Final Response",response)
 print("Context History:", context.history)
