@@ -15,7 +15,8 @@ class AgentLogger:
         print("----Tool Results----")
         print(output)
     
-    def context(window):
+    @staticmethod
+    def context(window:list):
         print("----Context Window---")
         for msg in window:
             print(msg)
