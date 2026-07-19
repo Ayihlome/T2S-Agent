@@ -3,7 +3,7 @@ from database.model import Base
 
 engine = create_engine(
     "sqlite:///database/inventory.db",
-    echo=True
+    echo=False
 )
 
 Base.metadata.create_all(bind=engine)

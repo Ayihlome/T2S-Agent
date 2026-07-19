@@ -2,10 +2,7 @@ from tools.schema import get_schema, get_schema_tool
 from tools.list_tables import list_tables, list_tables_tool
 from tools.execute_sql import execute_sql, execute_sql_tool
 from tools.describe_table import describe_table, describe_table_tool
-from logger.AgentLogging import AgentLogger
 
-
-logger = AgentLogger()
 
 class ToolManager:
     def __init__(self):
@@ -23,13 +20,7 @@ class ToolManager:
             tool: function = self.registry.get(tool_request["tool"]) 
             agruments = tool_request["arguments"]
 
-            # Logging tool call
-            logger.tools(tool, agruments)
-
             output = tool(agruments)
-
-            # Logging tool results
-            logger.results(output)
 
             # Returning a dict to feed straight into context
 
@@ -37,7 +28,7 @@ class ToolManager:
             "role":"user",
                 "content":
             f"""
-            Tool execute_sql returned:
+            Tool {tool_request['tool']} returned:
 
             {output}
 

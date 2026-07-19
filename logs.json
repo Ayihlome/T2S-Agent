@@ -1,0 +1,39 @@
+{
+    "session": {
+        "session_id": "4286b904-e1c7-4884-9a94-320e7d7b5eb3",
+        "trace_id": "d9e0a2bc-f612-42d5-8e3b-88ec5b4a4d6e",
+        "started_at": "2026-07-19 14:04:45.085817",
+        "ended_at": "2026-07-19 14:35:07.849855",
+        "model": "gemma 4:e2b"
+    },
+    "metrics": {
+        "prompt_tokens": 0,
+        "completion_tokens": 46,
+        "total_tokens": 137,
+        "llm_latency": "0:30:22.764038",
+        "tool_latency": "0:00:00.326116",
+        "total_latency": "0:30:22.764038"
+    },
+    "tools_called": [
+        {
+            "tool_name": "execute_sql",
+            "arguments": "SELECT price, quantity FROM Products WHERE product_name = 'BBQ Lays';",
+            "result": {
+                "role": "user",
+                "content": "\n            Tool execute_sql returned:\n\n            [{'price': 12, 'quantity': 200}]\n\n            If this fully answers the question,\n            answer the user directly.\n\n            Only call another tool if more information is needed.\n            "
+            },
+            "started_at": "2026-07-19 14:30:39.068464",
+            "ended_at": "2026-07-19 14:30:39.394580",
+            "duration": "0:00:00.326116",
+            "success": null
+        }
+    ],
+    "conversation": {
+        "prompt": "How much will I make if I sell all the BBQ Lays I have?",
+        "response": "If you sell all the BBQ Lays you have, you will make $2400 (12 * 200).",
+        "tool": {
+            "tool": "execute_sql",
+            "arguments": "SELECT price, quantity FROM Products WHERE product_name = 'BBQ Lays';"
+        }
+    }
+}

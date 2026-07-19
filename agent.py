@@ -14,23 +14,28 @@ log = AgentLogger()
 
 llm.loadModel(model_name="gemma4:e2b")
 
+log.startSession()
 # build context
 context = ContextBuilder()
 
-prompt = "How many drinks do we currently have in stock?"
+prompt = "How much will I make if I sell all the BBQ Lays I have?"
+log.conversation.prompt = prompt
 context.add_to_history(prompt)
+print("Thinking....")
 
 
 response = llm.generate(prompt=context.build_context(), tools=toolManager.avaliableTools)
-log.llm(response.message.content)
-print("Thinking....")
+log.metrics.prompt_tokens += context.tokenizer(context.history)
+log.metrics.completion_tokens += context.tokenizer(response.message.content)
 
 while True:
     try:
         tool_request = json.loads(response.message.content)
-        print("Tool being called: ", tool_request)
+        print("Tool being called...")
 
+        log.start_tool(tool_request)
         result: dict = toolManager.callTool(tool_request=tool_request)
+        log.finish_tool(result)
 
         # Add the result to the context and wait for final response, starting with the assistents response
         context.add_to_history({
@@ -42,15 +47,19 @@ while True:
 
         # Log context after tool call
         ctx = context.build_context()
-        log.context(window=ctx)
+        log.metrics.prompt_tokens += context.tokenizer(context.history)
 
+        # Second LLM call with tool results
         response = llm.generate(prompt=ctx, tools=toolManager.avaliableTools)
+
+        log.metrics.completion_tokens += context.tokenizer(response.message.content)
         log.llm(response.message.content)
+
     except json.JSONDecodeError:
         # The resonse now is no longer a JSON so is a response
         print(f"\n Final Response \nUser: {prompt}\nAgent: {response.message.content}")
+        log.endSession()
+        log.context(context.history)
+        log.saveLog() #to a file
         break
         
-
-print(f"\n Final Response \nUser: {prompt}\nAgent: {response.message.content}")
-log.context(context.history)
