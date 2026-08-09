@@ -1,4 +1,5 @@
 import re
+from state import AgentState
 
 # input validation
 def queryValidation(query):
@@ -16,7 +17,8 @@ def queryValidation(query):
 
 
 # tool permissions
-def toolCallValidation(tool_call, state):
+# State may raise an error because it should pull from the live state instead of the schema
+def toolCallValidation(tool_call, state=AgentState):
     if not isinstance(tool_call, str):
         return TypeError("Tool call is not a string")
     

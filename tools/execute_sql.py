@@ -1,20 +1,42 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session  
 from database.database import engine
-from tools.validator import validatePrompt
+
+from pydantic import BaseModel, Field
+from guardrails.validator import  toolCallValidation
 
 
-def execute_sql(query: str) -> list[dict]:
-    # Validate the query before execution
-    validatePrompt(query)
+def execute_sql(query: str) -> commandResults:
+  """Execute SQL command on database
 
-    with Session(engine) as session:
-        # safe guards should be added to prevent SQL injection attacks
-        result = session.execute(text(query))
+  Args:
+      query (str): the command you wish to perform
 
-        rows= [dict(row._mapping) for row in result.fetchall()]
+  Returns:
+      list[dict]: the result of the command in a list form of each row
+  """
+  # Validate the query before execution
+  toolCallValidation(query)
 
-        return rows
+  with Session(engine) as session:
+      # safe guards should be added to prevent SQL injection attacks
+      result = session.execute(text(query))
+
+      rows= [dict(row._mapping) for row in result.fetchall()]
+
+      return commandResults(
+        query=query,
+        rows=result
+      )
+
+class commandResults(BaseModel):
+  query : str = Field(min_length=1)
+  rows : list[dict] = Field(min_length=1)
+
+
+
+
+
 
 execute_sql_tool = {
   'type': 'function',

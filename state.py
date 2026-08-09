@@ -5,6 +5,6 @@ class AgentState(TypedDict):
     permissions: str
     tool_register: list[str]
     tool_call: str
-    tool_result: object
+    tool_result: list[dict]
     validation: bool
     result: str
