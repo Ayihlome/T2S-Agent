@@ -5,14 +5,6 @@ from tools.validator import validatePrompt
 
 
 def execute_sql(query: str) -> list[dict]:
-    """
-    Executes a SQL query against the database and returns the results as a list of dictionaries.
-    Arguments:
-        query (str): The SQL query string to be executed.
-    Returns:
-        list[dict]: A list of dictionaries representing the rows returned by the query.
-    """
-
     # Validate the query before execution
     validatePrompt(query)
 
