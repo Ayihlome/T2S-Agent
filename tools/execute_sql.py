@@ -1,11 +1,12 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session  
 from database.database import engine
+from langchain_core.tools import tool
 
 from pydantic import BaseModel, Field
 from guardrails.validator import  toolCallValidation
 
-
+@tool
 def execute_sql(query: str) -> commandResults:
   """Execute SQL command on database
 
@@ -32,9 +33,6 @@ def execute_sql(query: str) -> commandResults:
 class commandResults(BaseModel):
   query : str = Field(min_length=1)
   rows : list[dict] = Field(min_length=1)
-
-
-
 
 
 

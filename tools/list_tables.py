@@ -1,7 +1,9 @@
 from sqlalchemy.orm import Session
 from database.database import engine
+from langchain_core.tools import tool
 
 
+@tool
 def list_tables() -> list[str]:
     """Returns a list of all tables in the database
 
@@ -15,8 +17,6 @@ def list_tables() -> list[str]:
         tables = result.scalars().all()
         
         return tables
-
-
 
 
 list_tables_tool = {

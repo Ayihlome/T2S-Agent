@@ -1,10 +1,13 @@
 from sqlalchemy.orm import Session
 from database.database import engine
 from database.model import Products
+from langchain_core.tools import tool
 
 from guardrails.validator import toolCallValidation
 from pydantic import BaseModel, Field
 
+
+@tool
 def get_schema(table_name: str) -> schemaCommand:
     """Returns a schema of a specified table
 
@@ -27,6 +30,7 @@ def get_schema(table_name: str) -> schemaCommand:
 class schemaCommand(BaseModel):
     table_name : str = Field(min_length=1)
     columns: list[str] = Field(min_length=1, default_factory=list)
+
 
 
 
