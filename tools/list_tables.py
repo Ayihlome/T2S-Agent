@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import inspect
 from database.database import engine
 from langchain_core.tools import tool
 
@@ -10,13 +11,12 @@ def list_tables() -> list[str]:
     Returns:
         list[dict]: a list of table names 
     """
-
-    with Session(engine) as session:
-        result = session.execute("SHOW TABLES")
-        
-        tables = result.scalars().all()
-        
-        return tables
+    
+    inspector = inspect(engine)
+    
+    tables = inspector.get_table_names()
+    
+    return tables
 
 
 list_tables_tool = {

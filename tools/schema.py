@@ -6,6 +6,9 @@ from langchain_core.tools import tool
 from guardrails.validator import toolCallValidation
 from pydantic import BaseModel, Field
 
+class schemaCommand(BaseModel):
+    table_name : str = Field(min_length=1)
+    columns: list[str] = Field(min_length=1, default_factory=list)
 
 @tool
 def get_schema(table_name: str) -> schemaCommand:
@@ -26,11 +29,6 @@ def get_schema(table_name: str) -> schemaCommand:
             table_name=table_name,
             columns=schema
         )
-
-class schemaCommand(BaseModel):
-    table_name : str = Field(min_length=1)
-    columns: list[str] = Field(min_length=1, default_factory=list)
-
 
 
 

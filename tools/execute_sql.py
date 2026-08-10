@@ -6,6 +6,10 @@ from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 from guardrails.validator import  toolCallValidation
 
+class commandResults(BaseModel):
+  query : str = Field(min_length=1)
+  rows : list[dict] = Field(min_length=1)
+
 @tool
 def execute_sql(query: str) -> commandResults:
   """Execute SQL command on database
@@ -30,9 +34,7 @@ def execute_sql(query: str) -> commandResults:
         rows=result
       )
 
-class commandResults(BaseModel):
-  query : str = Field(min_length=1)
-  rows : list[dict] = Field(min_length=1)
+
 
 
 

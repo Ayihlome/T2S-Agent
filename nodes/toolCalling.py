@@ -28,16 +28,23 @@ def callTool(state: AgentState):
     
     prompt =f"You are an expert database engineer assistant. Convert this user question into a SQL query: {user_query}"
     
+    print(f"Calling tool...({tool_call})")
     command: SQLRequest = model_structured.invoke(prompt)
     
-    toolCallValidation(result)
+    print("Validating tool call...")
+    toolCallValidation(command)
     
-    tool = tool_register.get(tool_call)
+    tool = tool_register.get(tool_call["name"])
     
     if not tool:
         raise ValueError("Function not found")
     
-    result = tool(command)
+    if tool_call["name"] == "list_tables":
+        result = tool.invoke({}) #no args
+    if tool_call["name"] == "execute_sql":
+        result = tool.invoke({"args": command.command})
+    if tool_call["name"] == "list_tables":
+        result =tool.invoke({"args"})
     
     state["tool_result"] = result
     return state
