@@ -31,7 +31,7 @@ def execute_sql(query: str) -> commandResults:
 
       return commandResults(
         query=query,
-        rows=result
+        rows=rows
       )
 
 

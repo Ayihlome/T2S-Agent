@@ -21,8 +21,23 @@ model_structured = model.with_structured_output(Checkpoint)
 def reflect(state:AgentState):
     user_query = state["user_query"]
     tool_result = state["tool_result"]
+    dbSchema = state["db_schema"]
     
-    prompt =f"You are an expert database engineer assistant. From this users question: '{user_query}' determine if you have enough information to answer their question also based on these previous tool calls: {tool_result}. If you decide you do not have enough information(where complete is false) (missing information such as tables and column names), select the appropriate tool (execute_sql, get_schema, list_tables) and construct the command string."
+    prompt =f"""You are an expert database engineer assistant.
+
+USER QUESTION: '{user_query}'
+DATABASE SCHEMA:
+{dbSchema}
+
+PREVIOUS TOOL RESULTS:
+{tool_result}
+
+CRITICAL RULES:
+1. Schema information (table names and column names) is NOT row data.
+2. If the user question asks for specific data/values and you have NOT executed an SQL query to retrieve the actual rows yet, setting 'complete' to True is STRICTLY FORBIDDEN.
+3. If you haven't executed the SQL query yet, select 'execute_sql' and construct the SQL query using the schema above.
+4. Set 'complete' to True ONLY when actual database records/rows have been retrieved via 'execute_sql'.
+"""
     
     print("Validating information...")
     result : Checkpoint = model_structured.invoke(prompt)
