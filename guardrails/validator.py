@@ -19,12 +19,14 @@ def queryValidation(query):
 # tool permissions
 # State may raise an error because it should pull from the live state instead of the schema
 def toolCallValidation(tool_call, state=AgentState):
-    if not isinstance(tool_call, str):
-        return TypeError("Tool call is not a string")
+    # if not isinstance(tool_call, dict):
+    #     return TypeError("Tool call is not a dictionary")
     
+    # Target the specific SQL query string directly
+    query_str = tool_call.get("args", {}).get("query", "") if isinstance(tool_call, dict) else str(tool_call)
     # Determine the SQL operation is allowed
-    flaggedOps = r"b\(SELECT|JOIN|WHERE| LEFT JOIN| RIGHT JOIN| INNER JOIN| FULL JOIN)"
-    if not  re.search(flaggedOps, tool_call, re.IGNORECASE):
+    flaggedOps = r"\b(SELECT|JOIN|WHERE| LEFT JOIN| RIGHT JOIN| INNER JOIN| FULL JOIN)"
+    if not  re.search(flaggedOps, query_str, re.IGNORECASE):
         # check permissions 
         if state["permissions"] == "Limited Access":
             raise PermissionError("Tool request not permitted")

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
-from langchain_ollama import ChatOllama
 
+from inference import model
 from guardrails.validator import toolCallValidation
 from state import AgentState
 from tools.execute_sql import execute_sql
@@ -10,10 +10,6 @@ from tools.schema import get_schema
 class SQLRequest(BaseModel):
     command : str = Field(description="SQL command to be performed on database")
 
-model = ChatOllama(
-    model="gemma4:e2b",
-    temperature=0
-)
 model_structured = model.with_structured_output(SQLRequest)
 
 tool_register = {
@@ -23,7 +19,8 @@ tool_register = {
 }
 
 def callTool(state: AgentState):
-    tool_call = state["tool_call"]
+    toolsState = state.get("tool_call")
+    tool_call = toolsState[-1] if toolsState else None      #in case there tool_call is empty
     user_query = state["user_query"]
     
     prompt =f"You are an expert database engineer assistant. Convert this user question into a SQL query: {user_query}"
@@ -42,9 +39,11 @@ def callTool(state: AgentState):
     if tool_call["name"] == "list_tables":
         result = tool.invoke({}) #no args
     if tool_call["name"] == "execute_sql":
-        result = tool.invoke({"args": command.command})
-    if tool_call["name"] == "list_tables":
-        result =tool.invoke({"args"})
+        result = tool.invoke(tool_call["args"])
+    if tool_call["name"] == "get_schema":
+        result =tool.invoke(tool_call["args"])
     
-    state["tool_result"] = result
+    print(f"\nTool Call Node result: {result}")
+    
+    state["tool_result"].append(result)
     return state

@@ -1,5 +1,3 @@
-from sqlalchemy.orm import Session
-from database.database import engine
 from database.model import Products
 from langchain_core.tools import tool
 
@@ -11,24 +9,27 @@ class schemaCommand(BaseModel):
     columns: list[str] = Field(min_length=1, default_factory=list)
 
 @tool
-def get_schema(table_name: str) -> schemaCommand:
+def get_schema(table_name: str) -> dict:
     """Returns a schema of a specified table
 
     Args:
-        table_name (str): name of a table
+        table_name(str): name of a table
 
     Returns:
         list[str]: a list of all the columns of the table
     """
     toolCallValidation(table_name)
     
-    with Session(engine) as session:
-        # Get the schema of the Products table
-        schema = Products.__table__.columns.keys()
-        return schemaCommand(
-            table_name=table_name,
-            columns=schema
-        )
+    # Get the schema of the Products table
+    schema = Products.__table__.columns.keys()
+    
+    print(f"Schema tool result: {schema}")
+    
+    return schemaCommand(
+        table_name=table_name,
+        columns=schema
+    ) 
+
 
 
 
