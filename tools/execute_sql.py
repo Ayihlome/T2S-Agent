@@ -1,28 +1,42 @@
 from sqlalchemy import text
 from sqlalchemy.orm import Session  
 from database.database import engine
-from tools.validator import validatePrompt
+from langchain_core.tools import tool
+
+from pydantic import BaseModel, Field
+from guardrails.validator import  toolCallValidation
+
+class commandResults(BaseModel):
+  query : str = Field(min_length=1)
+  rows : list[dict] = Field(min_length=1)
+
+@tool
+def execute_sql(query: str) -> commandResults:
+  """Execute SQL command on database
+
+  Args:
+      query (str): the command you wish to perform
+
+  Returns:
+      list[dict]: the result of the command in a list form of each row
+  """
+  # Validate the query before execution
+  toolCallValidation(query)
+
+  with Session(engine) as session:
+      # safe guards should be added to prevent SQL injection attacks
+      result = session.execute(text(query))
+
+      rows= [dict(row._mapping) for row in result.fetchall()]
+
+      return commandResults(
+        query=query,
+        rows=rows
+      )
 
 
-def execute_sql(query: str) -> list[dict]:
-    """
-    Executes a SQL query against the database and returns the results as a list of dictionaries.
-    Arguments:
-        query (str): The SQL query string to be executed.
-    Returns:
-        list[dict]: A list of dictionaries representing the rows returned by the query.
-    """
 
-    # Validate the query before execution
-    validatePrompt(query)
 
-    with Session(engine) as session:
-        # safe guards should be added to prevent SQL injection attacks
-        result = session.execute(text(query))
-
-        rows= [dict(row._mapping) for row in result.fetchall()]
-
-        return rows
 
 execute_sql_tool = {
   'type': 'function',
